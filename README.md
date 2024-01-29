@@ -85,6 +85,14 @@ This is the connector config: ![postgresql.json](postgresql.json)
  Set it like this:
 
     $ curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" localhost:8083/connectors/ -d @postgresql.json
+    HTTP/1.1 201 Created
+    Date: Mon, 29 Jan 2024 22:33:16 GMT
+    Location: http://localhost:8083/connectors/inventory-connector
+    Content-Type: application/json
+    Content-Length: 547
+    Server: Jetty(9.4.52.v20230823)
+
+    {"name":"inventory-connector","config":{"connector.class":"io.debezium.connector.postgresql.PostgresConnector","tasks.max":"1","plugin.name":"pgoutput","database.hostname":"postgres","database.port":"5432","database.user":"postgres","database.password":"mysecret","database.dbname":"postgres","topic.prefix":"fulfillment","table.include.list":"public.inventory","schema.history.internal.kafka.bootstrap.servers":"kafka:9092","schema.history.internal.kafka.topic":"schema-changes.inventory","name":"inventory-connector"},"tasks":[],"type":"source"}
 
 If there are no errors in the config, you should get back `201 Created` here.
 
@@ -101,16 +109,17 @@ Review the connector's tasks:
       "config": {
         "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
         "database.user": "postgres",
-        "database.dbname": "postgres",
+        "database.dbname": "inventory",
+        "tasks.max": "1",
+        "schema.history.internal.kafka.bootstrap.servers": "broker:29092",
+        "plugin.name": "pgoutput",
+        "database.port": "5432",
         "topic.prefix": "fulfillment",
         "schema.history.internal.kafka.topic": "schema-changes.inventory",
-        "tasks.max": "1",
         "database.hostname": "postgres",
         "database.password": "mysecret",
         "name": "inventory-connector",
-        "schema.history.internal.kafka.bootstrap.servers": "kafka:9092",
-        "table.include.list": "public.inventory",
-        "database.port": "5432"
+        "table.include.list": "public.customer"
       },
       "tasks": [
         {
@@ -123,22 +132,33 @@ Review the connector's tasks:
 
 ## Delete a connector
 
-Remember that a connector is creating state on the broker. Restarting the Kafka Connect container or pod does not remove the connector. Remove a connector with
+Remember that a connector is creating state on the broker. Restarting the Kafka Connect container or pod does not remove the connector. Remove a connector by referring to it's name:
 
     $ curl -i -X DELETE localhost:8083/connectors/inventory-connector/
     HTTP/1.1 204 No Content
     Date: Mon, 29 Jan 2024 21:13:50 GMT
     Server: Jetty(9.4.52.v20230823)
 
-, i.e., by referring to it's name.
-
 ## Watch for changes in topic
+
+List topics created so far:
 
     $ docker exec broker /bin/sh -c '/bin/kafka-topics --list --bootstrap-server localhost:29092'
     __consumer_offsets
+    fulfillment.public.customer
     my_connect_configs
     my_connect_offsets
     my_connect_statuses
+
+Consume:
+
+    $ docker exec broker /bin/sh -c '/bin/kafka-console-consumer --bootstrap-server localhost:29092 --topic fulfillment.public.customer --partition 0 --offset earliest' | jq
+    …
+
+From here on it works. Remove a row and you see the changes in the topics.
+
+    inventory=# delete from customer where id =1;
+    DELETE 1
 
 ## Further reading
 

@@ -8,10 +8,10 @@
         "database.port": "5432",
         "database.user": "postgres",
         "database.password": "mysecret",
-        "database.dbname": "postgres",
+        "database.dbname": "inventory",
         "topic.prefix": "fulfillment",
-        "table.include.list": "public.inventory",
-        "schema.history.internal.kafka.bootstrap.servers": "kafka:9092",
+        "table.include.list": "public.customer",
+        "schema.history.internal.kafka.bootstrap.servers": "broker:29092",
         "schema.history.internal.kafka.topic": "schema-changes.inventory"
     }
 }
