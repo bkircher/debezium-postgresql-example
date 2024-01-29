@@ -40,21 +40,21 @@ in the logs. Kafka Connect is up and running and we should be able to configure 
 ## Add some data
 
 ```sql
-CREATE TABLE customer (
-    id SERIAL PRIMARY KEY,
-    first_name VARCHAR(50),
-    last_name VARCHAR(50),
-    email VARCHAR(100),
-    phone VARCHAR(15),
-    address VARCHAR(255),
-    city VARCHAR(50),
-    state VARCHAR(50),
-    zip_code VARCHAR(10)
+create table customer (
+    id serial primary key,
+    first_name varchar(50),
+    last_name varchar(50),
+    email varchar(100),
+    phone varchar(15),
+    address varchar(255),
+    city varchar(50),
+    state varchar(50),
+    zip_code varchar(10)
 );
 ```
 
 ```sql
-INSERT INTO customer (first_name, last_name, email, phone, address, city, state, zip_code) VALUES
+insert into customer (first_name, last_name, email, phone, address, city, state, zip_code) values
 ('John', 'Doe', 'john.doe@example.com', '123-456-7890', '123 Main St', 'Anytown', 'Anystate', '12345'),
 ('Jane', 'Doe', 'jane.doe@example.com', '987-654-3210', '456 Main St', 'Anytown', 'Anystate', '12345'),
 ('Jim', 'Smith', 'jim.smith@example.com', '555-555-5555', '789 Main St', 'Anytown', 'Anystate', '12345'),
@@ -80,33 +80,11 @@ For this we need to
 - Register the PostgresQL connector to listen to the `inventory` database.
 - Watch the PostgreSQL connector start.
 
-This is the connector config:
-
-```json
-{
-  "name": "inventory-connector",
-  "config": {
-    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-    "tasks.max": "1",
-    "plugin.name": "pgoutput",
-    "database.hostname": "postgres",
-    "database.port": "5432",
-    "database.user": "postgres",
-    "database.password": "mysecret",
-    "database.dbname" : "postgres",
-    "topic.prefix": "fulfillment",
-    "table.include.list": "public.inventory",
-    "schema.history.internal.kafka.bootstrap.servers": "kafka:9092",
-    "schema.history.internal.kafka.topic": "schema-changes.inventory"
-  }
-}
-```
+This is the connector config: ![postgresql.json](postgresql.json)
 
  Set it like this:
 
-    $ curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" localhost:8083/connectors/ -d '
-        <snip>above config</snip>
-    '
+    $ curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" localhost:8083/connectors/ -d @postgresql.json
 
 If there are no errors in the config, you should get back `201 Created` here.
 
