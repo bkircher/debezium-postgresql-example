@@ -12,26 +12,22 @@ The tutorial is with MySQL and apparently an example database. Below, however, i
 
 It's a RH project so of course they use their own Zookeeper and Kafka builds :/
 
-## Start Zookeeper
+## Start everything
 
-    podman pod create --name=dbz --publish "9092,5432,8083"
-    podman run -it --rm --name zookeeper --pod dbz quay.io/debezium/zookeeper:2.4
+    docker-compose up
 
-## Start the broker
+In the end, we should see something like
 
-    podman run -it --rm --name kafka --pod dbz quay.io/debezium/kafka:2.4
+```raw
+2024-01-26 20:06:19,509 INFO   ||  [Worker clientId=connect-1, groupId=1] Starting connectors and tasks using config offset -1   [org.apache.kafka.connect.runtime.distributed.DistributedHerder]
+2024-01-26 20:06:19,509 INFO   ||  [Worker clientId=connect-1, groupId=1] Finished starting connectors and tasks   [org.apache.kafka.connect.runtime.distributed.DistributedHerder]
+```
 
-## Start database
+in the logs. Kafka Connect is up and running and we should be able to configure it now through it's REST interface.
 
-    podman run -ti --rm --name postgres --pod dbz -v $PWD/my-postgres.conf:/etc/postgresql/postgresql.conf:z \
-        -e POSTGRES_PASSWORD=mysecret \
-        -e POSTGRES_DB=inventory \
-        postgres:16 \
-        -c 'config_file=/etc/postgresql/postgresql.conf'
+## Verify database runtime configuration
 
-Use below to spawn a container and execute psql inside it:
-
-    $ podman run -ti --rm --name psql --pod dbz postgres:16 sh -c 'psql -h localhost -U postgres -d inventory'
+    $ psql -h localhost -U postgres -d inventory
     psql (16.1 (Debian 16.1-1.pgdg120+1))
     Type "help" for help.
 
@@ -41,9 +37,7 @@ Use below to spawn a container and execute psql inside it:
      logical
     (1 row)
 
-inventory=#
-
-Now, add some data.
+## Add some data
 
 ```sql
 CREATE TABLE customer (
@@ -67,36 +61,16 @@ INSERT INTO customer (first_name, last_name, email, phone, address, city, state,
 ('Jill', 'Smith', 'jill.smith@example.com', '444-444-4444', '101112 Main St', 'Anytown', 'Anystate', '12345');
 ```
 
-## Start Kafka Connect
+## Create a connector
 
-Finally, start Kafka connect.
+Debezium uses an HTTP end-point to accept and modify connector configuration. It is mapped on port 8083.
 
-    podman run -it --rm --name connect --pod dbz \
-        -e GROUP_ID=1 \
-        -e CONFIG_STORAGE_TOPIC=my_connect_configs \
-        -e OFFSET_STORAGE_TOPIC=my_connect_offsets \
-        -e STATUS_STORAGE_TOPIC=my_connect_statuses \
-        quay.io/debezium/connect:2.4
-
-We should see something like
-
-```raw
-2024-01-26 20:06:19,509 INFO   ||  [Worker clientId=connect-1, groupId=1] Starting connectors and tasks using config offset -1   [org.apache.kafka.connect.runtime.distributed.DistributedHerder]
-2024-01-26 20:06:19,509 INFO   ||  [Worker clientId=connect-1, groupId=1] Finished starting connectors and tasks   [org.apache.kafka.connect.runtime.distributed.DistributedHerder]
-```
-
-in the logs. Kafka Connect is up and running and we should be able to configure it now through it's REST interface. Spawn an interactive shell container inside the pod
-
-    podman run -ti --rm --name prompt --pod dbz fedora sh
-
-and run
-
-    # curl -H "Accept:application/json" localhost:8083/
+    $ curl -H "Accept:application/json" localhost:8083/
     {"version":"3.5.1","commit":"2c6fb6c54472e90a","kafka_cluster_id":"pGhKRa65SaKs6hCM1g8StQ"}
 
 No connectors are currently running:
 
-    # curl -H "Accept:application/json" localhost:8083/connectors/
+    $ curl -H "Accept:application/json" localhost:8083/connectors/
     []
 
 ## Deploy the PostgreSQL connector
@@ -130,21 +104,20 @@ This is the connector config:
 
  Set it like this:
 
-    # curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" localhost:8083/connectors/ -d '
-        <above config />
+    $ curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" localhost:8083/connectors/ -d '
+        <snip>above config</snip>
     '
 
 If there are no errors in the config, you should get back `201 Created` here.
 
 Verify that inventory-connector is included in the list of connectors:
 
-    # curl -H "Accept:application/json" localhost:8083/connectors/
+    $ curl -H "Accept:application/json" localhost:8083/connectors/
     ["inventory-connector"]
 
 Review the connector's tasks:
 
-    # dnf install -y jq
-    # curl -s -X GET -H "Accept:application/json" localhost:8083/connectors/inventory-connector | jq
+    $ curl -s -X GET -H "Accept:application/json" localhost:8083/connectors/inventory-connector | jq
     {
       "name": "inventory-connector",
       "config": {
@@ -174,9 +147,20 @@ Review the connector's tasks:
 
 Remember that a connector is creating state on the broker. Restarting the Kafka Connect container or pod does not remove the connector. Remove a connector with
 
-    # curl -i -X DELETE localhost:8083/connectors/inventory-connector/
+    $ curl -i -X DELETE localhost:8083/connectors/inventory-connector/
+    HTTP/1.1 204 No Content
+    Date: Mon, 29 Jan 2024 21:13:50 GMT
+    Server: Jetty(9.4.52.v20230823)
 
 , i.e., by referring to it's name.
+
+## Watch for changes in topic
+
+    $ docker exec broker /bin/sh -c '/bin/kafka-topics --list --bootstrap-server localhost:29092'
+    __consumer_offsets
+    my_connect_configs
+    my_connect_offsets
+    my_connect_statuses
 
 ## Further reading
 
