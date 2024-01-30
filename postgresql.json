@@ -12,6 +12,10 @@
         "topic.prefix": "fulfillment",
         "table.include.list": "public.customer",
         "schema.history.internal.kafka.bootstrap.servers": "broker:29092",
-        "schema.history.internal.kafka.topic": "schema-changes.inventory"
+        "schema.history.internal.kafka.topic": "schema-changes.inventory",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "key.converter.schemas.enable": "false",
+        "value.converter.schemas.enable": "false"
     }
 }
