@@ -1,0 +1,12 @@
+{
+  "id": 2,
+  "first_name": "Fernando",
+  "last_name": "Doe",
+  "email": "jane.doe@example.com",
+  "phone": "987-654-3210",
+  "address": "456 Main St",
+  "city": "Anytown",
+  "state": "Anystate",
+  "zip_code": "12345",
+  "__deleted": "false"
+}
