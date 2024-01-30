@@ -153,7 +153,66 @@ List topics created so far:
 Consume:
 
     $ docker exec broker /bin/sh -c '/bin/kafka-console-consumer --bootstrap-server localhost:29092 --topic fulfillment.public.customer --partition 0 --offset earliest' | jq
-    …
+    {
+      "id": 1,
+      "first_name": null,
+      "last_name": null,
+      "email": null,
+      "phone": null,
+      "address": null,
+      "city": null,
+      "state": null,
+      "zip_code": null,
+      "__deleted": "true"
+    }
+    {
+      "id": 5,
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "john.doe@example.com",
+      "phone": "123-456-7890",
+      "address": "123 Main St",
+      "city": "Anytown",
+      "state": "Anystate",
+      "zip_code": "12345",
+      "__deleted": "false"
+    }
+    {
+      "id": 6,
+      "first_name": "Jane",
+      "last_name": "Doe",
+      "email": "jane.doe@example.com",
+      "phone": "987-654-3210",
+      "address": "456 Main St",
+      "city": "Anytown",
+      "state": "Anystate",
+      "zip_code": "12345",
+      "__deleted": "false"
+    }
+    {
+      "id": 7,
+      "first_name": "Jim",
+      "last_name": "Smith",
+      "email": "jim.smith@example.com",
+      "phone": "555-555-5555",
+      "address": "789 Main St",
+      "city": "Anytown",
+      "state": "Anystate",
+      "zip_code": "12345",
+      "__deleted": "false"
+    }
+    {
+      "id": 8,
+      "first_name": "Jill",
+      "last_name": "Smith",
+      "email": "jill.smith@example.com",
+      "phone": "444-444-4444",
+      "address": "101112 Main St",
+      "city": "Anytown",
+      "state": "Anystate",
+      "zip_code": "12345",
+      "__deleted": "false"
+    }
 
 From here on it works. Remove a row and you see the changes in the topics.
 
