@@ -214,10 +214,30 @@ Consume:
       "__deleted": "false"
     }
 
-From here on it works. Remove a row and you see the changes in the topics.
+From here on changes are captured and produced to the topic. Leave the terminal open. In a new terminal remove a row. You see a delete message in the topic.
 
-    inventory=# delete from customer where id =1;
+    inventory=# delete from customer where id = 1;
     DELETE 1
+
+This will create a message:
+
+    {
+      "id": 1,
+      "first_name": null,
+      "last_name": null,
+      "email": null,
+      "phone": null,
+      "address": null,
+      "city": null,
+      "state": null,
+      "zip_code": null,
+      "__deleted": "true"
+    }
+
+If you want to trigger a change message for all rows in a table again, you can do something like this now:
+
+    inventory=# update customer set first_name = first_name;
+    UPDATE 4
 
 ## Further reading
 
