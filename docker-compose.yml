@@ -47,7 +47,7 @@ services:
       - ./my-postgres.conf:/etc/postgresql/postgresql.conf
 
   connect:
-    image: quay.io/debezium/connect:2.5
+    image: debezium/connect:2.6
     hostname: connect
     container_name: connect
     depends_on:
