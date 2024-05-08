@@ -10,8 +10,6 @@ Figure out how to apply configuration for Kafka Connect and the connector itself
 
 The tutorial is with MySQL and apparently an example database. Below, however, is with PostgreSQL.
 
-It's a RH project so of course they use their own Zookeeper and Kafka builds :/
-
 ## Start everything
 
     docker-compose up
@@ -77,12 +75,12 @@ No connectors are currently running:
 
 For this we need to
 
-- Register the PostgresQL connector to listen to the `inventory` database.
+- Register the PostgreSQL connector to listen to the `inventory` database.
 - Watch the PostgreSQL connector start.
 
-This is the connector config: ![postgresql.json](postgresql.json)
+This is the connector config: [postgresql.json](./postgresql.json)
 
- Set it like this:
+Set it like this:
 
     $ curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" localhost:8083/connectors/ -d @postgresql.json
     HTTP/1.1 201 Created
